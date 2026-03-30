@@ -31,14 +31,9 @@ Output goes to `dist/`.
 
 ## Deployment
 
-The app is configured for **GitHub Pages**.
+The app is automatically deployed to GitHub Pages on every push to `main` via the included GitHub Actions workflow (`.github/workflows/deploy.yml`).
 
-1. Push your repository to GitHub as `<your-username>/fds-mocker`.
-2. In the repository settings, go to **Pages** and set the source to the `gh-pages` branch.
-3. The included GitHub Actions workflow (`.github/workflows/deploy.yml`) will build and deploy automatically on every push to `main`.
-
-The deployed URL will be:  
-`https://<your-username>.github.io/fds-mocker/`
+**Live app:** [jkruse.github.io/fds-mocker](https://jkruse.github.io/fds-mocker/)
 
 ## Technology
 
