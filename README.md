@@ -54,4 +54,4 @@ npm run test:watch # watch mode
 npm run test:coverage
 ```
 
-Vitest test suite covering all composables, utilities, and components (54+ tests).
+Vitest test suite covering all composables, utilities, and components (75+ tests).

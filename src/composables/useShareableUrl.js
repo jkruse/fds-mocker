@@ -29,25 +29,47 @@ function fromBase64url(str) {
 async function compress(str) {
   const input = new TextEncoder().encode(str);
   const chunks = [];
-  const writable = new WritableStream({ write(chunk) { chunks.push(chunk); } });
+  const writable = new WritableStream({
+    write(chunk) {
+      chunks.push(chunk);
+    }
+  });
   await new ReadableStream({
-    start(c) { c.enqueue(input); c.close(); },
+    start(c) {
+      c.enqueue(input);
+      c.close();
+    },
   }).pipeThrough(new CompressionStream('deflate-raw')).pipeTo(writable);
   const totalLen = chunks.reduce((n, c) => n + c.length, 0);
   const result = new Uint8Array(totalLen);
   let offset = 0;
-  for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
   return result;
 }
 
 async function decompress(bytes) {
   const chunks = [];
-  const writable = new WritableStream({ write(chunk) { chunks.push(chunk); } });
+  const writable = new WritableStream({
+    write(chunk) {
+      chunks.push(chunk);
+    }
+  });
   await new ReadableStream({
-    start(c) { c.enqueue(bytes); c.close(); },
+    start(c) {
+      c.enqueue(bytes);
+      c.close();
+    },
   }).pipeThrough(new DecompressionStream('deflate-raw')).pipeTo(writable);
   return new TextDecoder().decode(
-    chunks.reduce((acc, c) => { const r = new Uint8Array(acc.length + c.length); r.set(acc); r.set(c, acc.length); return r; }, new Uint8Array(0))
+    chunks.reduce((acc, c) => {
+      const r = new Uint8Array(acc.length + c.length);
+      r.set(acc);
+      r.set(c, acc.length);
+      return r;
+    }, new Uint8Array(0))
   );
 }
 
