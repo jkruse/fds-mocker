@@ -17,9 +17,10 @@ describe('Editor', () => {
     expect(wrapper.element).toBeTruthy();
   });
 
-  it('renders with initial modelValue', () => {
+  it('renders the initial modelValue content in the editor', () => {
     const wrapper = mount(Editor, { props: { modelValue: '<p>hello</p>' } });
-    expect(wrapper.exists()).toBe(true);
+    // CodeMirror renders text content into .cm-line elements
+    expect(wrapper.find('.cm-line').text()).toContain('hello');
   });
 
   it('unmounts without throwing', () => {
