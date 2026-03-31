@@ -15,6 +15,9 @@
           @click="theme = 'borgerdk'"
         >Borger.dk</button>
       </div>
+      <button class="copy-link-btn" @click="copyLink" :aria-label="copyLabel">
+        {{ copyLabel }}
+      </button>
     </header>
     <main class="workspace">
       <div class="pane pane-editor">
@@ -35,20 +38,59 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useWindowSize } from '@vueuse/core';
+import { useWindowSize, watchDebounced } from '@vueuse/core';
 import Editor from './components/Editor.vue';
 import Preview from './components/Preview.vue';
 import { useEditorContent } from './composables/useEditorContent.js';
 import { useTheme } from './composables/useTheme.js';
+import { encode, decode } from './composables/useShareableUrl.js';
 import { preloadDkfdsAssets } from './utils/pageShell.js';
 
 const { content } = useEditorContent();
 const { theme } = useTheme();
 
-const { width: windowWidth } = useWindowSize();
-const previewRatio = ref(0.5);
-const previewWidth = computed(() => Math.max(200, windowWidth.value * previewRatio.value));
-const isResizing = ref(false);
+// URL fragment sync ──────────────────────────────────────────────────────────
+
+// On mount: if the URL contains a valid fragment, it takes precedence over localStorage.
+onMounted(async () => {
+  const parsed = await decode(location.hash);
+  if (parsed) {
+    content.value = parsed.content;
+    theme.value = parsed.theme;
+  }
+});
+
+// Keep the URL fragment in sync as the user edits (debounced to avoid thrashing).
+watchDebounced(
+  [content, theme],
+  async ([c, t]) => {
+    try {
+      const fragment = await encode(c, t);
+      history.replaceState(null, '', '#' + fragment);
+    } catch {
+      // Encoding failed (e.g. no CompressionStream and fallback also failed) — ignore.
+    }
+  },
+  { debounce: 1500, immediate: true },
+);
+
+// Copy link button ────────────────────────────────────────────────────────────
+
+const LABEL_DEFAULT = '🔗 Copy link';
+const LABEL_COPIED  = '✓ Copied!';
+const copyLabel = ref(LABEL_DEFAULT);
+
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    copyLabel.value = LABEL_COPIED;
+    setTimeout(() => { copyLabel.value = LABEL_DEFAULT; }, 2000);
+  } catch {
+    // Clipboard API unavailable — silently ignore.
+  }
+}
+
+// DKFDS assets ────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
   try {
@@ -57,6 +99,13 @@ onMounted(async () => {
     console.error('[FDS Mocker] Failed to load DKFDS assets:', e);
   }
 });
+
+// Resizable panes ─────────────────────────────────────────────────────────────
+
+const { width: windowWidth } = useWindowSize();
+const previewRatio = ref(0.5);
+const previewWidth = computed(() => Math.max(200, windowWidth.value * previewRatio.value));
+const isResizing = ref(false);
 
 function startResize(e) {
   isResizing.value = true;
@@ -156,6 +205,24 @@ html, body, #app {
 .theme-btn.active {
   background: #63b3ed;
   color: #16213e;
+}
+
+.copy-link-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: transparent;
+  color: #718096;
+  border: 1px solid #0f3460;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.copy-link-btn:hover {
+  color: #e2e8f0;
+  border-color: #63b3ed;
 }
 
 .workspace {

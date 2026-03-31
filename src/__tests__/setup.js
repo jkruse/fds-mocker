@@ -29,3 +29,11 @@ if (typeof Range !== 'undefined' && !Range.prototype.getClientRects) {
     [Symbol.iterator]: function* () {},
   });
 }
+
+// Expose Node.js built-in CompressionStream / DecompressionStream in the jsdom
+// global scope so useShareableUrl.js can be tested without mocking.
+if (typeof CompressionStream === 'undefined') {
+  const { CompressionStream, DecompressionStream } = await import('stream/web');
+  global.CompressionStream = CompressionStream;
+  global.DecompressionStream = DecompressionStream;
+}

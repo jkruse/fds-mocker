@@ -9,7 +9,9 @@ Paste any DKFDS component HTML into the left-hand editor and see it rendered liv
 - **Live preview** — updates as you type (300 ms debounce)
 - **Syntax-highlighted editor** — CodeMirror 6 with HTML language support
 - **Automatic page shell** — your snippet is automatically wrapped in a full DKFDS page so CSS and JS are always loaded
-- **Persistent state** — your editor content is saved in `localStorage` and restored on reload
+- **Theme switcher** — toggle between the Virk.dk and Borger.dk stylesheets in the toolbar
+- **Save & share** — the URL fragment is kept in sync with your markup (deflate-compressed, base64url-encoded). Bookmark the page to save your work, or click **🔗 Copy link** to share a mockup with others
+- **Persistent state** — editor content and selected theme are also saved in `localStorage` and restored on reload
 - **Resizable panes** — drag the divider to adjust the editor/preview split
 
 ## Getting started
@@ -43,3 +45,13 @@ The app is automatically deployed to GitHub Pages on every push to `main` via th
 | Editor | CodeMirror 6 |
 | Design system | [dkfds](https://www.npmjs.com/package/dkfds) (loaded from bundled assets) |
 | Deployment | GitHub Pages via GitHub Actions |
+
+## Tests
+
+```bash
+npm test           # run once
+npm run test:watch # watch mode
+npm run test:coverage
+```
+
+Vitest test suite covering all composables, utilities, and components (54+ tests).

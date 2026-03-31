@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, flushPromises } from '@vue/test-utils';
 import App from './App.vue';
 
 vi.mock('./utils/pageShell.js', () => ({
@@ -7,9 +7,20 @@ vi.mock('./utils/pageShell.js', () => ({
   buildShell: vi.fn(() => '<html></html>'),
 }));
 
+vi.mock('./composables/useShareableUrl.js', () => ({
+  encode: vi.fn().mockResolvedValue('v1:mockfragment'),
+  decode: vi.fn().mockResolvedValue(null),
+}));
+
+import { decode } from './composables/useShareableUrl.js';
+
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
+    decode.mockResolvedValue(null);
+    // Reset location.hash
+    history.replaceState(null, '', '#');
   });
 
   it('renders the toolbar title "FDS Mocker"', () => {
@@ -88,10 +99,58 @@ describe('App', () => {
 
   it('starts with "virkdk" stored in localStorage when Virk.dk is selected', async () => {
     const wrapper = shallowMount(App);
-    // Default theme click sets the default — trigger it explicitly
     const [, borgerBtn] = wrapper.findAll('.theme-btn');
     await borgerBtn.trigger('click');
 
     expect(localStorage.getItem('fds-mocker-theme')).toBe('borgerdk');
+  });
+
+  // ---------------------------------------------------------------------------
+  // Copy Link button
+  // ---------------------------------------------------------------------------
+  it('renders a Copy Link button', () => {
+    const wrapper = shallowMount(App);
+    expect(wrapper.find('.copy-link-btn').exists()).toBe(true);
+  });
+
+  it('Copy Link button shows default label', () => {
+    const wrapper = shallowMount(App);
+    expect(wrapper.find('.copy-link-btn').text()).toContain('Copy link');
+  });
+
+  it('clicking Copy Link calls navigator.clipboard.writeText with the current URL', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+    const wrapper = shallowMount(App);
+    await wrapper.find('.copy-link-btn').trigger('click');
+
+    expect(writeText).toHaveBeenCalledWith(location.href);
+    vi.unstubAllGlobals();
+  });
+
+  it('Copy Link button shows "✓ Copied!" after clicking', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+
+    const wrapper = shallowMount(App);
+    await wrapper.find('.copy-link-btn').trigger('click');
+    await flushPromises(); // let clipboard.writeText resolve and copyLabel update
+
+    expect(wrapper.find('.copy-link-btn').text()).toContain('Copied');
+    vi.unstubAllGlobals();
+  });
+
+  // ---------------------------------------------------------------------------
+  // URL fragment loading
+  // ---------------------------------------------------------------------------
+  it('overrides content and theme from URL fragment on mount', async () => {
+    decode.mockResolvedValue({ content: '<p>from-url</p>', theme: 'borgerdk' });
+
+    const wrapper = shallowMount(App);
+    await flushPromises(); // let onMounted async decode + Vue reactivity settle
+
+    const previewStub = wrapper.findComponent({ name: 'Preview' });
+    expect(previewStub.props('theme')).toBe('borgerdk');
+    expect(previewStub.props('content')).toBe('<p>from-url</p>');
   });
 });
