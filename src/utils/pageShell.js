@@ -6,7 +6,7 @@
  * once at app startup and cached in module-level variables.
  */
 
-let cachedCss = null;
+const cachedThemeCss = { virkdk: null, borgerdk: null };
 let cachedJs = null;
 let cachedIcons = null;
 
@@ -21,32 +21,44 @@ async function fetchText(url) {
  * Call this once when the app mounts.
  */
 export async function preloadDkfdsAssets(base) {
-  const cssUrl = `${base}dkfds/css/dkfds.min.css`;
+  const virkkUrl = `${base}dkfds/css/dkfds-virkdk.min.css`;
+  const borgerUrl = `${base}dkfds/css/dkfds-borgerdk.min.css`;
   const jsUrl = `${base}dkfds/js/dkfds.min.js`;
   const iconsUrl = `${base}dkfds/img/all-svg-icons.svg`;
-  const [rawCss, cachedJsRaw, rawIcons] = await Promise.all([fetchText(cssUrl), fetchText(jsUrl), fetchText(iconsUrl)]);
+
+  const [rawVirkk, rawBorger, rawJs, rawIcons] = await Promise.all([
+    fetchText(virkkUrl),
+    fetchText(borgerUrl),
+    fetchText(jsUrl),
+    fetchText(iconsUrl),
+  ]);
 
   // Rewrite relative url() references in the CSS so they resolve correctly inside srcdoc iframes.
   // The CSS lives at <base>dkfds/css/, so "../img/" → absolute <base>dkfds/img/
   const imgBase = `${location.origin}${base}dkfds/img/`;
-  cachedCss = rawCss.replace(/url\((['"]?)\.\.\/img\//g, `url($1${imgBase}`);
-  cachedJs = cachedJsRaw;
+  const rewrite = (css) => css.replace(/url\((['"]?)\.\.\/img\//g, `url($1${imgBase}`);
+  cachedThemeCss.virkdk = rewrite(rawVirkk);
+  cachedThemeCss.borgerdk = rewrite(rawBorger);
 
+  cachedJs = rawJs;
   cachedIcons = rawIcons.replace(/<\?xml[^?]*\?>\s*/i, '').replace(/<!DOCTYPE[^>]*>\s*/i, '');
 }
 
 /**
  * Returns a complete HTML document string with the user snippet injected.
  * Requires preloadDkfdsAssets() to have been called first.
+ * @param {string} snippet - Raw HTML to render inside the page body.
+ * @param {'virkdk'|'borgerdk'} theme - Which DKFDS theme to apply.
  */
-export function buildShell(snippet) {
+export function buildShell(snippet, theme = 'virkdk') {
+  const css = cachedThemeCss[theme] ?? cachedThemeCss.virkdk ?? '/* DKFDS CSS not yet loaded */';
   return `<!DOCTYPE html>
 <html lang="da">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-${cachedCss ?? '/* DKFDS CSS not yet loaded */'}
+${css}
   </style>
 </head>
 <body>

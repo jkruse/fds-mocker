@@ -3,6 +3,18 @@
     <header class="toolbar">
       <span class="toolbar-title">FDS Mocker</span>
       <span class="toolbar-hint">Paste DKFDS component HTML on the left — see the result on the right</span>
+      <div class="theme-toggle" role="group" aria-label="Vælg tema">
+        <button
+          class="theme-btn"
+          :class="{ active: theme === 'virkdk' }"
+          @click="theme = 'virkdk'"
+        >Virk.dk</button>
+        <button
+          class="theme-btn"
+          :class="{ active: theme === 'borgerdk' }"
+          @click="theme = 'borgerdk'"
+        >Borger.dk</button>
+      </div>
     </header>
     <main class="workspace">
       <div class="pane pane-editor">
@@ -12,7 +24,7 @@
       <div class="divider" @mousedown="startResize"/>
       <div class="pane pane-preview" :style="{ flexBasis: previewWidth + 'px', pointerEvents: isResizing ? 'none' : undefined }">
         <div class="pane-label">Preview</div>
-        <Preview :content="content"/>
+        <Preview :content="content" :theme="theme"/>
       </div>
     </main>
     <footer class="footer">
@@ -27,9 +39,11 @@ import { useWindowSize } from '@vueuse/core';
 import Editor from './components/Editor.vue';
 import Preview from './components/Preview.vue';
 import { useEditorContent } from './composables/useEditorContent.js';
+import { useTheme } from './composables/useTheme.js';
 import { preloadDkfdsAssets } from './utils/pageShell.js';
 
 const { content } = useEditorContent();
+const { theme } = useTheme();
 
 const { width: windowWidth } = useWindowSize();
 const previewRatio = ref(0.5);
@@ -113,6 +127,35 @@ html, body, #app {
 .toolbar-hint {
   font-size: 0.8rem;
   color: #718096;
+}
+
+.theme-toggle {
+  display: flex;
+  margin-left: auto;
+  border: 1px solid #0f3460;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.theme-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: transparent;
+  color: #718096;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.theme-btn:hover {
+  color: #e2e8f0;
+}
+
+.theme-btn.active {
+  background: #63b3ed;
+  color: #16213e;
 }
 
 .workspace {

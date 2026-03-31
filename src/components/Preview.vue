@@ -5,12 +5,13 @@
 </template>
 
 <script setup>
-import { useTemplateRef } from 'vue';
+import { useTemplateRef, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { buildShell } from '../utils/pageShell.js';
 
 const props = defineProps({
   content: { type: String, default: '' },
+  theme: { type: String, default: 'virkdk' },
 });
 
 const iframeRef = useTemplateRef('iframe');
@@ -20,9 +21,11 @@ watchDebounced(
   { debounce: 300, immediate: true },
 );
 
+watch(() => props.theme, () => updatePreview(props.content));
+
 function updatePreview(snippet) {
   if (iframeRef.value) {
-    iframeRef.value.srcdoc = buildShell(snippet);
+    iframeRef.value.srcdoc = buildShell(snippet, props.theme);
   }
 }
 </script>
