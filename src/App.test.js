@@ -23,9 +23,14 @@ describe('App', () => {
     history.replaceState(null, '', '#');
   });
 
-  it('renders the toolbar title "FDS Mocker"', () => {
+  it('renders the toolbar title containing "FDS Mocker"', () => {
     const wrapper = shallowMount(App);
-    expect(wrapper.find('.toolbar-title').text()).toBe('FDS Mocker');
+    expect(wrapper.find('.toolbar-title').text()).toContain('FDS Mocker');
+  });
+
+  it('renders a DKFDS semver version string in the toolbar title', () => {
+    const wrapper = shallowMount(App);
+    expect(wrapper.find('.toolbar-title').text()).toMatch(/\d+\.\d+\.\d+/);
   });
 
   it('renders a hint text in the toolbar', () => {

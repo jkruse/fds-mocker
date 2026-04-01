@@ -1,7 +1,7 @@
 <template>
   <div class="app">
     <header class="toolbar">
-      <span class="toolbar-title">FDS Mocker</span>
+      <span class="toolbar-title">FDS Mocker · DKFDS {{ dkfdsVersion }}</span>
       <span class="toolbar-hint">Paste DKFDS component HTML on the left — see the result on the right</span>
       <div class="theme-toggle" role="group" aria-label="Vælg tema">
         <button
@@ -37,15 +37,16 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useWindowSize, watchDebounced } from '@vueuse/core';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import Editor from './components/Editor.vue';
 import Preview from './components/Preview.vue';
 import { useEditorContent } from './composables/useEditorContent.js';
+import { decode, encode } from './composables/useShareableUrl.js';
 import { useTheme } from './composables/useTheme.js';
-import { encode, decode } from './composables/useShareableUrl.js';
 import { preloadDkfdsAssets } from './utils/pageShell.js';
 
+const dkfdsVersion = __DKFDS_VERSION__;
 const { content } = useEditorContent();
 const { theme } = useTheme();
 
