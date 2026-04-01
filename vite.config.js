@@ -1,9 +1,16 @@
+import { createRequire } from 'module';
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+
+const require = createRequire(import.meta.url);
+const dkfdsVersion = require('./node_modules/dkfds/package.json').version;
 
 export default defineConfig({
   base: '/fds-mocker/',
   plugins: [vue()],
+  define: {
+    __DKFDS_VERSION__: JSON.stringify(dkfdsVersion),
+  },
   test: {
     environment: 'jsdom',
     globals: true,
